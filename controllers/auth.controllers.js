@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const ResponseHandler = require("../utils/ResponseHandler");
 const generateToken=(userId)=>{
     return jwt.sign(
-        {userId},process.env.JWT_SECRET || "gatekit-secret-key",{expiresIn: process.env.JWT_EXPIRE || "7d"}
+        {userId}, process.env.JWT_SECRET || "gatekit-secret-key",{expiresIn: process.env.JWT_EXPIRE || "7d"}
     )
 }
 

@@ -1,2 +1,2 @@
-/auth/register POST
-/auth/login  POST
+/auth/register POST ----- Done qaqa
+/auth/login  POST  ----- Done qaqa

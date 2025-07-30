@@ -1,8 +1,9 @@
 {
   "name": "gatekit-auth",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "",
-  "main": "server.js",
+  "main": "index.js",
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
@@ -10,12 +11,19 @@
   },
   "author": "Jamil Aghazada & Murad Eyvazli",
   "license": "MIT",
-  "dependencies": {
+  "peerDependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.16.5",
+    "nodemon": "^3.1.10"
+  },
+  "dependencies":  {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
     "mongoose": "^8.16.5",
     "nodemon": "^3.1.10"
   }

@@ -15,7 +15,6 @@ const auth_register = async (req, res) => {
         if (existingUser) {
             return ResponseHandler.conflict(res, "This username or email is already in use");
         }
-
         const { metadata, ...restBody } = req.body;
         
         const newUser = new User({
@@ -47,7 +46,6 @@ const auth_login = async (req, res) => {
         if (!username || !password) {
             return ResponseHandler.validationError(res, "Username and password are required");
         }
-
         const user = await User.findOne({
             $or: [{ email: username }, { username: username }]
         });

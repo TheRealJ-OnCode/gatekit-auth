@@ -170,41 +170,15 @@ const auth_logout = async (req, res) => {
     }
 };
 
-const auth_validate = async (req, res) => {
-    try {
-        const authHeader = req.headers.authorization;
-
-        if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return ResponseHandler.unauthorized(res, "No token provided");
-        }
-
-        const token = authHeader.split(" ")[1];
-        const decoded = verifyAccessToken(token);
-
-        const user = await User.findById(decoded.userId).select("-password").populate("roles");
-        
-        if (!user) {
-            return ResponseHandler.unauthorized(res, "User not found");
-        }
-
-        if (user.isBanned) {
-            return ResponseHandler.forbidden(res, "Your account has been banned");
-        }
-
-        return ResponseHandler.success(res, "Token is valid", {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            roles: user.roles,
-            metadata: user.metadata
-        });
-    } catch (error) {
-        console.error("Validate error:", error);
-        if (error.name === "JsonWebTokenError" || error.name === "TokenExpiredError") {
-            return ResponseHandler.unauthorized(res, "Invalid or expired token");
-        }
-        return ResponseHandler.serverError(res, "An error occurred during validation");
-    }
+const auth_validate = (req, res) => {
+    const user = req.user;
+    return ResponseHandler.success(res, "Token is valid", {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        roles: user.roles,
+        metadata: user.metadata
+    });
 };
 
 module.exports = {

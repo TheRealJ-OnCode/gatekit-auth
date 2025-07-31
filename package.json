@@ -10,7 +10,7 @@
     "dev": "nodemon server.js"
   },
   "bin": {
-    "gatekit-auth": "./bin/seedRoles.js"
+    "gatekit-auth": "./bin/cli.js"
   },
   "author": "Jamil Aghazada & Murad Eyvazli",
   "license": "MIT",

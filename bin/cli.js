@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const [command, ...args] = process.argv.slice(2);
 switch (command) {
   case "roles:seed":

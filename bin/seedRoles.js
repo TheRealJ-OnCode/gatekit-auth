@@ -7,7 +7,7 @@ module.exports = async function (args) {
 
   const mongoURI = process.env.MONGODB_URI;
   if (!mongoURI) {
-    console.error("❌ MONGODB_URI not set in .env");
+    console.error("MONGODB_URI not set in .env");
     process.exit(1);
   }
 
@@ -36,7 +36,7 @@ module.exports = async function (args) {
       await Role.create(role);
       console.log(`Created role: ${role.name}`);
     } else {
-      console.log(`ℹRole '${role.name}' already exists`);
+      console.log(`Role '${role.name}' already exists`);
     }
   }
 

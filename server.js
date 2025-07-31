@@ -11,8 +11,15 @@ app.use(cors());
 (async () => {
     await connectDB()
     app.use("/auth",authRoutes)
+    const { middleware } = require("./index");
     app.get("/", (req, res) => {
         res.send("🚧 Gatekit API is currently under development. Stay tuned for upcoming features!");
+    })
+    app.get("/protected", middleware.authenticate, (req, res) => {
+        res.json({ 
+            message: "Protected route accessed!",
+            user: req.user
+        });
     })
     app.listen(PORT, () => { console.log("Gatekit Demo Running on : ", PORT) });
 })()

@@ -38,8 +38,8 @@ class ResponseHandler {
             data,
         })
     }
-    static serverError(res, message = "Internal Server Error") {
-        return this.error(res, message, null, 500);
+    static serverError(res, message = "Internal Server Error", error = null) {
+        return this.error(res, message, error, 500);
     }
 }
 

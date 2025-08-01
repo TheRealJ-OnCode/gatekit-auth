@@ -3,25 +3,24 @@ const { initRedis } = require("../services/redis.service");
 
 let initialized = false;
 
-const initGatekit = async ({ mongoURI, useRedis = true }) => {
+const initGatekit = async ({ mongoURI, useRedis = false, redisOptions = {} }) => {
   if (initialized) return;
-  
+
   if (mongoose.connection.readyState !== 1) {
     await mongoose.connect(mongoURI);
   }
-  
+
   if (!mongoose.models.User) {
     require("../models/User");
   }
-  
+
   if (!mongoose.models.Role) {
     require("../models/Role");
   }
-  
+
   if (useRedis) {
-    initRedis();
+    await initRedis(redisOptions);
   }
-  
   initialized = true;
 };
 

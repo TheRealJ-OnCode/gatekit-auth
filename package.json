@@ -1,7 +1,7 @@
 {
-  "name": "gatekit-auth",
-  "version": "1.2.0",
-  "description": "",
+  "name": "gatekit-auth-demo",
+  "version": "1.0.0",
+  "description": "Plug-and-play authentication and role-based access control system for Express.js applications.",
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
@@ -12,15 +12,32 @@
   "bin": {
     "gatekit-auth": "./bin/cli.js"
   },
+  "keywords": [
+    "auth",
+    "authentication",
+    "jwt",
+    "express",
+    "mongoose",
+    "redis",
+    "rbac",
+    "access-control"
+  ],
   "author": "Jamil Aghazada & Murad Eyvazli",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheRealJ-OnCode/gatekit-auth"
+  },
+  "bugs": {
+    "url": "https://github.com/TheRealJ-OnCode/gatekit-auth/issues"
+  },
+  "homepage": "https://github.com/TheRealJ-OnCode/gatekit-auth#readme",
   "peerDependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
-    "mongoose": "^8.16.5",
-    "nodemon": "^3.1.10"
+    "mongoose": "^8.16.5"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -31,7 +48,9 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.5",
     "node-fetch": "^3.3.2",
-    "nodemon": "^3.1.10",
     "redis": "^4.6.14"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }

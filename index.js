@@ -4,6 +4,7 @@ const { initGatekit } = require("./init/initializer");
 const getModels = require("./utils/getModels");
 const { authenticate, requirePermission, requireRole, optionalAuth } = require("./middleware/auth.middleware");
 const { registerRole, deleteRole, assignRole, removeRole, getUserRoles } = require("./helpers/roles");
+const { registerCallback } = require("./core/callbacks")
 const authRouter = express.Router();
 authRouter.use("/", authRoutes);
 
@@ -27,5 +28,6 @@ module.exports = {
     initGatekit,
     getModels,
     middleware,
-    roleHelpers
+    roleHelpers,
+    registerCallback
 }

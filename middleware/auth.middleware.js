@@ -2,6 +2,7 @@ const { verifyAccessToken } = require("../services/token.service");
 const { isTokenBlacklisted } = require("../services/redis.service");
 const User = require("../models/User");
 const ResponseHandler = require("../utils/ResponseHandler");
+const { GatekitError } = require("../utils/ErrorHandler");
 
 const authenticate = async (req, res, next) => {
   try {
@@ -32,13 +33,26 @@ const authenticate = async (req, res, next) => {
     next();
   } catch (error) {
     console.error("Authentication error:", error);
+    
     if (error.name === "JsonWebTokenError") {
-      return ResponseHandler.unauthorized(res, "Invalid token");
+      throw new GatekitError("Invalid token", 401);
     }
     if (error.name === "TokenExpiredError") {
-      return ResponseHandler.unauthorized(res, "Token expired");
+      throw new GatekitError("Token expired", 401);
     }
-    return ResponseHandler.serverError(res, "Authentication failed");
+    
+    // Handle database errors
+    if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+      throw new GatekitError(`Database error during authentication: ${error.message}`, 500);
+    }
+    
+    // Handle cast errors (invalid ObjectId)
+    if (error.name === 'CastError') {
+      throw new GatekitError("Invalid user ID in token", 400);
+    }
+    
+    // Wrap other errors in GatekitError
+    throw new GatekitError(`Authentication failed: ${error.message}`, 500);
   }
 };
 
@@ -68,7 +82,7 @@ const requirePermission = (permission) => {
       next();
     } catch (error) {
       console.error("Permission check error:", error);
-      return ResponseHandler.serverError(res, "Permission check failed");
+      throw new GatekitError(`Permission check failed: ${error.message}`, 500);
     }
   };
 };
@@ -88,7 +102,7 @@ const requireRole = (roleName) => {
       next();
     } catch (error) {
       console.error("Role check error:", error);
-      return ResponseHandler.serverError(res, "Role check failed");
+      throw new GatekitError(`Role check failed: ${error.message}`, 500);
     }
   };
 };

@@ -1,5 +1,6 @@
 const User = require("../models/User");
 const ResponseHandler = require("../utils/ResponseHandler");
+const { GatekitError } = require("../utils/ErrorHandler");
 const { generateTokens, verifyRefreshToken, verifyAccessToken } = require("../services/token.service");
 const { setRefreshToken, getRefreshToken, deleteRefreshToken, blacklistToken, deleteUserSessions } = require("../services/redis.service");
 
@@ -36,7 +37,25 @@ const auth_register = async (req, res) => {
         }, 201);
     } catch (error) {
         console.error("Register error:", error);
-        return ResponseHandler.serverError(res, "An error occurred during the registration process");
+        
+        // Handle MongoDB duplicate key error
+        if (error.code === 11000) {
+            throw new GatekitError("Username or email already exists", 409);
+        }
+        
+        // Handle MongoDB validation errors
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(err => err.message);
+            throw new GatekitError(`Validation error: ${messages.join(', ')}`, 400);
+        }
+        
+        // Handle other database errors
+        if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+            throw new GatekitError(`Database error: ${error.message}`, 500);
+        }
+        
+        // Wrap other errors in GatekitError
+        throw new GatekitError(`Registration failed: ${error.message}`, 500);
     }
 };
 
@@ -81,7 +100,19 @@ const auth_login = async (req, res) => {
         });
     } catch (error) {
         console.error("Login error:", error);
-        return ResponseHandler.serverError(res, "An error occurred during the login process");
+        
+        // Handle database errors
+        if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+            throw new GatekitError(`Database error: ${error.message}`, 500);
+        }
+        
+        // Handle cast errors (invalid ObjectId)
+        if (error.name === 'CastError') {
+            throw new GatekitError("Invalid user data", 400);
+        }
+        
+        // Wrap other errors in GatekitError
+        throw new GatekitError(`Login failed: ${error.message}`, 500);
     }
 };
 
@@ -136,7 +167,19 @@ const auth_refresh = async (req, res) => {
         });
     } catch (error) {
         console.error("Refresh token error:", error);
-        return ResponseHandler.serverError(res, "An error occurred during token refresh", error.message);
+        
+        // Handle database errors
+        if (error.name === 'MongoError' || error.name === 'MongoServerError') {
+            throw new GatekitError(`Database error: ${error.message}`, 500);
+        }
+        
+        // Handle cast errors (invalid ObjectId)
+        if (error.name === 'CastError') {
+            throw new GatekitError("Invalid user ID in token", 400);
+        }
+        
+        // Wrap other errors in GatekitError
+        throw new GatekitError(`Token refresh failed: ${error.message}`, 500);
     }
 };
 
@@ -166,7 +209,9 @@ const auth_logout = async (req, res) => {
         }
     } catch (error) {
         console.error("Logout error:", error);
-        return ResponseHandler.serverError(res, "An error occurred during logout");
+        
+        // Wrap errors in GatekitError
+        throw new GatekitError(`Logout failed: ${error.message}`, 500);
     }
 };
 

@@ -99,10 +99,19 @@ The following exports are available from the `gatekit-auth` module and used thro
 
   ```js
   const { getModels } = require("gatekit-auth");
-  const { User, Role } = getModels();
+  (async()=>{
+    .app.use(express.json());
+    await initGatekit({
+        mongoURI: process.env.MONGODB_URI,
+        useRedis: false,  //you can use redis , change boolean to true value and add redisOptions
+    });
+    const {User,Role} = getModels();
 
   const allUsers = await User.find();
   const role = await Role.findOne({ name: "admin" });
+  // your routes
+  })()
+
   ```
 
 ````

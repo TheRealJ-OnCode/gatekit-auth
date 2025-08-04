@@ -4,7 +4,7 @@ This guide explains how to set up a backend authentication system for a website 
 
 ## 📦 About the Module
 
-**gatekit-auth** (v1.2.0) - A comprehensive authentication and authorization system with role-based access control, developed by Jamil Aghazada & Murad Eyvazli.
+**gatekit-auth** (v3.0.0) - A comprehensive authentication and authorization system with role-based access control, developed by Jamil Aghazada & Murad Eyvazli.
 
 ### 🔧 Technologies
 
@@ -742,18 +742,78 @@ This section explains the internal design of `gatekit-auth` for advanced users w
 
 ## 📋 Important Notes
 
-1. **MongoDB** and **Redis** servers must be running
+1. **MongoDB**  server must be running.**Redis** is optional
 2. Use **strong JWT secrets** in production environment
 3. **HTTPS** usage is recommended
-4. **express-rate-limit** can be added for rate limiting
-5. **winston** or **morgan** can be used for log management
-
 ---
+
+
+## 🗃️ Redis Token Blacklisting Support
+
+When `useRedis: true` is passed into `initGatekit()`, the module enables **refresh token storage** and **access token blacklisting** using Redis.
+
+### 🔐 What is Token Blacklisting?
+
+When a user logs out, their **access token** is marked as *revoked* in Redis to prevent reuse until expiration. Any subsequent API calls using this token will be rejected with a `401 Unauthorized` error.
+
+### ✅ How It Works
+
+- Access tokens are stored in Redis using the key format:  
+  `blacklist:<token>`
+- On each authenticated request, `authenticate` middleware checks if the token is blacklisted.
+- If so, it returns:  
+  `Token has been revoked`.
+
+### 🛠️ Sample Redis Setup
+
+```js
+await initGatekit({
+  mongoURI: process.env.MONGODB_URI,
+  useRedis: true,
+  redisOptions: {
+    host: "localhost",
+    port: 6379,
+    password: "your-redis-password", // optional
+    db: 0,
+  }
+});
+```
+You can also use a Redis URL (takes priority over host/port):
+```bash
+REDIS_URL=redis://default:yourpassword@localhost:6379/0
+```
+#### 🔁 Example Logout Callback
+```js
+const { registerCallback } = require("gatekit-auth");
+const { blacklistToken } = require("gatekit-auth/services/redis.service");
+
+registerCallback("onLogout", async (userId, req, res) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (token) {
+    await blacklistToken(token);
+    console.log("Access token has been blacklisted:", token);
+  }
+});
+```
+## 🧪 Official Test Repository
+
+👉 Visit: [**Gatekit Auth Test Suite**](https://github.com/TheRealJ-OnCode/gatekit-auth-test-suite)
+
+> 🧪 This is a fully working example showing how to:
+> 
+> - Initialize Gatekit with Redis & MongoDB  
+> - Register login/logout callbacks  
+> - Protect routes with roles/permissions  
+> - Debug blacklisted tokens  
+> 
+> ⚠️ It’s not a production project. Just a sandbox playground for testing purposes.
+
+
 
 ## 🤝 Support and Development
 
 **Developers**: Jamil Aghazada & Murad Eyvazli  
-**Version**: 1.0.0  
+**Version**: 3.0.0  
 **License**: MIT
 
 ✅ This is the first stable version of the module.

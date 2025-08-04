@@ -31,37 +31,32 @@ npm install gatekit-auth
 # Install required dependencies (if not present)
 npm install express mongoose ioredis dotenv cors
 ```
-
 ### 2. Basic Server Setup
 
 ```javascript
 // server.js
 const express = require("express");
-const { authRouter, initGatekit, middleware } = require("gatekit-auth");
 require("dotenv").config();
+
+const { authRouter, initGatekit } = require("gatekit-auth");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// Initialize Gatekit and auth routes
 (async () => {
-  // Database connection and configuration
+  app.use(express.json());
+
   await initGatekit({
-    mongoUri: process.env.MONGO_URI || "mongodb://localhost:27017/myapp",
-    redisConfig: {
+    mongoURI: process.env.MONGODB_URI,
+    useRedis: true,
+    redisOptions: {
       host: process.env.REDIS_HOST || "localhost",
       port: process.env.REDIS_PORT || 6379,
-    },
+    }, 
   });
 
-  // Add auth routes
   app.use("/auth", authRouter);
-
-  // Protected route example
+   // Protected route example
   app.get("/profile", middleware.authenticate, (req, res) => {
     res.json({
       message: "Profile information",
@@ -69,11 +64,34 @@ app.use(express.urlencoded({ extended: true }));
     });
   });
 
+
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 })();
 ```
+---
+
+### 📦 Gatekit Module Exports Explained
+
+The following exports are available from the `gatekit-auth` module and used throughout your project:
+
+- **`authRouter`**  
+  Adds built-in authentication routes such as `/auth/register`, `/auth/login`, `/auth/logout`, `/auth/refresh`, and `/auth/validate`.
+
+- **`initGatekit`**  
+  Initializes the Gatekit system, connects to MongoDB/Redis, and prepares internal models and services.
+
+- **`middleware`**  
+  Contains helpful access control middleware functions:
+
+  - `authenticate` – Ensures the user is logged in via JWT
+  - `requireRole(role)` – Restricts access to users with a specific role
+  - `requirePermission(permission)` – Restricts access based on permission value
+  - `optionalAuth` – Makes authentication optional, adds `req.user` if token exists
+
+- **`registerCallback(eventName, fn)`**  
+  Hook into the lifecycle of auth events like registration, login, logout, token refresh, or validation.
 
 ### 3. Environment Variables (.env)
 
@@ -262,9 +280,9 @@ app.get("/public-content", middleware.optionalAuth, (req, res) => {
 
 ## ⚙️ Callback Usage
 
-The `gatekit-auth` module provides **callback support** so you can run custom logic after user operations.
+The `gatekit-auth` module provides **callback support**, allowing you to run custom logic after specific user actions such as registration, login, logout, token refresh, or validation.
 
-### 🔧 Usage:
+### 🔧 Basic Usage
 
 ```js
 const { registerCallback } = require("gatekit-auth");
@@ -273,16 +291,30 @@ registerCallback("onRegister", async (user, req, res) => {
   console.log("New user registered:", user.email);
 });
 ```
+### 🧩 Example: Assign Role to User on Registration
+You can assign roles to users programmatically during or after registration using the built-in roleHelpers utility:
+```js
+const { registerCallback, roleHelpers } = require("gatekit-auth");
 
-- onRegister: Triggered after user registration
+registerCallback("onRegister", async (user, req, res) => {
+  // Assign the "editor" role to new users
+  await roleHelpers.assignRole(user._id, "editor");
+  console.log("Editor role assigned to", user.username);
+});
+```
+You can also use other helpers like:
 
-- onLogin: Triggered after user login
+```js
+await roleHelpers.removeRole(userId, "editor");
+const roles = await roleHelpers.getUserRoles(userId);
+```
+### 🪝 Available Callback Events
 
-- onRefresh: Triggered after token refresh
-
-- onLogout: Triggered after user logout
-
-- onValidate: Triggered when token is validated
+- **`onRegister`** – Triggered after user registration  
+- **`onLogin`** – Triggered after user login  
+- **`onRefresh`** – Triggered after token refresh  
+- **`onLogout`** – Triggered after user logout  
+- **`onValidate`** – Triggered when token is validated
 
 ## 👥 Role and Permission Management
 
@@ -328,12 +360,12 @@ npx gatekit-auth roles:clear
 module.exports = [
   {
     name: "admin",
-    permissions: ["user:create", "user:delete"]
+    permissions: ["user:create", "user:delete"],
   },
   {
     name: "editor",
-    permissions: ["article:write", "article:edit"]
-  }
+    permissions: ["article:write", "article:edit"],
+  },
 ];
 ```
 
@@ -651,6 +683,31 @@ COPY . .
 EXPOSE 3000
 CMD ["node", "server.js"]
 ```
+---
+## 🧠 How It Works Internally
+
+This section explains the internal design of `gatekit-auth` for advanced users who want to understand how the system works behind the scenes:
+
+- 🔐 **Token-Based Authentication**  
+  Access and refresh tokens are generated using JWT (HMAC SHA-256). Access tokens are short-lived (`15m`), while refresh tokens live longer (`7d`).
+
+- 🧱 **MongoDB + Mongoose**  
+  User and Role schemas are managed via Mongoose. Roles are stored as ObjectId references and populated dynamically during authentication.
+
+- 🗃️ **Redis Blacklisting (Optional)**  
+  When Redis is enabled, refresh tokens are stored and blacklisted on logout. Expired or revoked access tokens are also tracked if needed.
+
+- 🔄 **Callbacks**  
+  Internal lifecycle events (register, login, logout, refresh, validate) trigger callbacks for custom logic.
+
+- ⚙️ **Role and Permission System**  
+  Role-based access is enforced by middleware. Permissions are simple strings and can include wildcards like `"*"`.
+
+- 🧩 **Modular Middleware**  
+  Middleware functions like `authenticate`, `requireRole`, `requirePermission`, and `optionalAuth` are plug-and-play.
+
+- 📁 **Separation of Concerns**  
+  Auth logic, token services, Redis integration, models, and CLI are decoupled into clean, testable modules.
 
 ---
 
@@ -667,7 +724,8 @@ CMD ["node", "server.js"]
 ## 🤝 Support and Development
 
 **Developers**: Jamil Aghazada & Murad Eyvazli  
-**Version**: 1.2.0  
+**Version**: 1.0.0  
 **License**: MIT
 
-This module is under active development, with new features and improvements being continuously added.
+✅ This is the first stable version of the module.
+While the core features are fully functional, we welcome feedback and will continue to improve it based on real-world usage and reported issues.

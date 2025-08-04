@@ -31,6 +31,7 @@ npm install gatekit-auth
 # Install required dependencies (if not present)
 npm install express mongoose ioredis dotenv cors
 ```
+
 ### 2. Basic Server Setup
 
 ```javascript
@@ -52,11 +53,11 @@ const PORT = process.env.PORT || 3000;
     redisOptions: {
       host: process.env.REDIS_HOST || "localhost",
       port: process.env.REDIS_PORT || 6379,
-    }, 
+    },
   });
 
   app.use("/auth", authRouter);
-   // Protected route example
+  // Protected route example
   app.get("/profile", middleware.authenticate, (req, res) => {
     res.json({
       message: "Profile information",
@@ -64,12 +65,12 @@ const PORT = process.env.PORT || 3000;
     });
   });
 
-
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
 })();
 ```
+
 ---
 
 ### 📦 Gatekit Module Exports Explained
@@ -92,7 +93,19 @@ The following exports are available from the `gatekit-auth` module and used thro
 
 - **`registerCallback(eventName, fn)`**  
   Hook into the lifecycle of auth events like registration, login, logout, token refresh, or validation.
+- **`getModels()`**  
+  Returns internal Mongoose models used by Gatekit.  
+  You can access and extend `User`, `Role`, and `Session` models as needed:
 
+  ```js
+  const { getModels } = require("gatekit-auth");
+  const { User, Role } = getModels();
+
+  const allUsers = await User.find();
+  const role = await Role.findOne({ name: "admin" });
+  ```
+
+````
 ### 3. Environment Variables (.env)
 
 ```env
@@ -111,7 +124,7 @@ JWT_REFRESH_EXPIRE=7d
 
 # Server
 PORT=3000
-```
+````
 
 ---
 
@@ -291,8 +304,11 @@ registerCallback("onRegister", async (user, req, res) => {
   console.log("New user registered:", user.email);
 });
 ```
+
 ### 🧩 Example: Assign Role to User on Registration
+
 You can assign roles to users programmatically during or after registration using the built-in roleHelpers utility:
+
 ```js
 const { registerCallback, roleHelpers } = require("gatekit-auth");
 
@@ -302,18 +318,20 @@ registerCallback("onRegister", async (user, req, res) => {
   console.log("Editor role assigned to", user.username);
 });
 ```
+
 You can also use other helpers like:
 
 ```js
 await roleHelpers.removeRole(userId, "editor");
 const roles = await roleHelpers.getUserRoles(userId);
 ```
+
 ### 🪝 Available Callback Events
 
-- **`onRegister`** – Triggered after user registration  
-- **`onLogin`** – Triggered after user login  
-- **`onRefresh`** – Triggered after token refresh  
-- **`onLogout`** – Triggered after user logout  
+- **`onRegister`** – Triggered after user registration
+- **`onLogin`** – Triggered after user login
+- **`onRefresh`** – Triggered after token refresh
+- **`onLogout`** – Triggered after user logout
 - **`onValidate`** – Triggered when token is validated
 
 ## 👥 Role and Permission Management
@@ -683,7 +701,9 @@ COPY . .
 EXPOSE 3000
 CMD ["node", "server.js"]
 ```
+
 ---
+
 ## 🧠 How It Works Internally
 
 This section explains the internal design of `gatekit-auth` for advanced users who want to understand how the system works behind the scenes:
